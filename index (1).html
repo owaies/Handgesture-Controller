@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Gesture Presentation + Laser</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #6366f1; 
+            --primary-dark: #4f46e5;
+            --bg: #0f172a; 
+            --panel: #1e293b;
+            --accent: #ec4899;
+            --border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+        }
+        
+        body { 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text-primary); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            overflow: hidden; 
+            display: flex; 
+            height: 100vh; 
+        }
+        
+        /* SIDEBAR */
+        #sidebar {
+            width: 280px; 
+            background: linear-gradient(135deg, var(--panel) 0%, #0f172a 100%); 
+            border-right: 1px solid var(--border);
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px;
+            transition: margin-left 0.4s ease; 
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        #sidebar h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+        
+        .info-section {
+            font-size: 13px; 
+            color: var(--text-secondary); 
+            line-height: 1.7;
+            background: rgba(99, 102, 241, 0.08);
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .gesture-item {
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* BUTTONS */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        
+        #stop-cam { background: #ef4444; display: none; }
+        #stop-cam:hover { background: #dc2626; }
+        
+        #upload-another { background: var(--accent); display: none; }
+        #upload-another:hover { background: #be185d; }
+        
+        .upload-box {
+            border: 2px solid var(--border); 
+            padding: 20px; 
+            text-align: center; 
+            border-radius: 12px; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(99, 102, 241, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .upload-box:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.15); }
+        input[type="file"] { display: none; }
+
+        /* MAIN STAGE */
+        #stage { 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: var(--bg); 
+            overflow: hidden;
+        }
+        
+        canvas#pdf-render { 
+            max-width: 100%; 
+            max-height: 100vh; 
+            object-fit: contain; 
+            border-radius: 8px;
+        }
+        
+        /* CENTER UPLOAD */
+        .center-upload {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--border);
+            z-index: 5;
+            transition: opacity 0.3s ease;
+        }
+        .center-upload.hidden { opacity: 0; pointer-events: none; }
+        .center-upload h3 { margin: 0 0 30px 0; font-size: 24px; color: var(--text-primary); }
+        .center-upload label {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 15px;
+            cursor: pointer; padding: 30px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            border: 2px dashed var(--primary); border-radius: 16px; transition: all 0.3s ease;
+        }
+        .center-upload label:hover { transform: scale(1.02); border-color: var(--accent); }
+        .center-upload i { font-size: 48px; color: var(--primary); }
+
+        /* HUD & CAMERA */
+        .cam-container {
+            position: absolute; bottom: 20px; right: 20px; 
+            width: 160px; height: 120px;
+            background: black; border: 2px solid var(--border); 
+            border-radius: 12px; overflow: hidden; z-index: 20; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.3s ease;
+        }
+        .cam-container:hover { opacity: 1 !important; box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3); }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        
+        .hud {
+            position: absolute; top: 20px; right: 20px; 
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            padding: 12px 16px; border-radius: 25px; font-size: 13px;
+            display: flex; align-items: center; gap: 12px; pointer-events: none;
+            border: 1px solid var(--border);
+        }
+        .dot { width: 12px; height: 12px; background: #ef4444; border-radius: 50%; transition: all 0.3s ease; }
+        .dot.active { background: #22c55e; box-shadow: 0 0 12px #22c55e; }
+        
+        .feedback {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            padding: 30px; border-radius: 20px; opacity: 0; 
+            transition: opacity 0.3s ease; pointer-events: none;
+        }
+
+        /* LASER POINTER STYLE */
+        #laser-pointer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 15px 5px rgba(255, 0, 0, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            z-index: 100;
+            display: none; /* Hidden by default */
+            transition: top 0.05s linear, left 0.05s linear; /* Smooth fast movement */
+            border: 2px solid white;
+        }
+
+        body.immersive #sidebar { margin-left: -310px; }
+        body.immersive .cam-container { opacity: 0.2; }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2><i class="fas fa-hand-sparkles"></i> Gesture Presenter</h2>
+        
+        <div class="info-section">
+            <strong>Gestures</strong>
+            <div class="gesture-item">☝️ <strong>Index Finger:</strong> Laser Pointer</div>
+            <div class="gesture-item">✌️ <strong>Victory:</strong> Next Slide</div>
+            <div class="gesture-item">👍 <strong>Thumb Up:</strong> Prev Slide</div>
+            <div class="gesture-item">✋ <strong>Open Palm:</strong> Fullscreen</div>
+        </div>
+        
+        <div class="button-group">
+            <button id="start-cam"><i class="fas fa-video"></i> Start Camera</button>
+            <button id="stop-cam"><i class="fas fa-stop-circle"></i> Stop Camera</button>
+            <button id="upload-another"><i class="fas fa-file-pdf"></i> Upload Another PDF</button>
+        </div>
+    </div>
+
+    <div id="stage">
+        <div class="center-upload" id="center-upload">
+            <h3>Begin Presenting</h3>
+            <label class="upload-box" style="border-radius: 16px; cursor: pointer;">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Upload PDF to Start</span>
+                <input type="file" id="file-input" accept="application/pdf">
+            </label>
+        </div>
+        
+        <div class="hud">
+            <div class="dot" id="status-dot"></div>
+            <span id="status-text">AI Loading...</span>
+            <span id="page-num" style="border-left: 1px solid #555; padding-left: 10px; margin-left: 5px">0 / 0</span>
+        </div>
+
+        <canvas id="pdf-render"></canvas>
+        
+        <div id="laser-pointer"></div>
+        
+        <div id="feedback" class="feedback"><i class="fas fa-arrow-right"></i></div>
+        
+        <div class="cam-container">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GestureRecognizer, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+
+        // --- VARIABLES ---
+        let pdfDoc = null;
+        let pageNum = 1;
+        let isRendering = false;
+        let gestureRecognizer;
+        let runningMode = "VIDEO";
+        let webcamRunning = false;
+        let lastVideoTime = -1;
+        let lastGestureTime = 0;
+        const COOLDOWN = 1500; 
+
+        // DOM Elements
+        const video = document.getElementById("webcam");
+        const canvas = document.getElementById("pdf-render");
+        const ctx = canvas.getContext("2d");
+        const laser = document.getElementById("laser-pointer");
+        const stage = document.getElementById("stage");
+        
+        // --- PDF LOGIC (Unchanged) ---
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        function loadPDF(file) {
+            if(file.type !== 'application/pdf') { alert("Invalid PDF"); return; }
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                    pdfDoc = pdf; pageNum = 1;
+                    document.getElementById('page-num').innerText = `${pageNum} / ${pdfDoc.numPages}`;
+                    renderPage(pageNum);
+                    document.getElementById('center-upload').classList.add('hidden');
+                    document.getElementById('upload-another').style.display = 'flex';
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if(e.target.files[0]) { loadPDF(e.target.files[0]); e.target.value = ''; }
+        });
+        document.getElementById('upload-another').addEventListener('click', () => document.getElementById('file-input').click());
+
+        function renderPage(num) {
+            isRendering = true;
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({scale: 1.5});
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                page.render({canvasContext: ctx, viewport: viewport}).promise.then(() => isRendering = false);
+                document.getElementById('page-num').innerText = `${num} / ${pdfDoc.numPages}`;
+            });
+        }
+        
+        function onNextPage() { if (!pdfDoc || pageNum >= pdfDoc.numPages) return; pageNum++; renderPage(pageNum); showFeedback('fa-chevron-right'); }
+        function onPrevPage() { if (!pdfDoc || pageNum <= 1) return; pageNum--; renderPage(pageNum); showFeedback('fa-chevron-left'); }
+        function onToggleFullscreen() { document.body.classList.toggle('immersive'); showFeedback('fa-expand'); }
+        
+        function showFeedback(icon) {
+            const fb = document.getElementById('feedback');
+            fb.innerHTML = `<i class="fas ${icon}"></i>`; fb.style.opacity = 1;
+            setTimeout(() => fb.style.opacity = 0, 800);
+        }
+
+        // --- AI SETUP ---
+        const createGestureRecognizer = async () => {
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+                    delegate: "GPU"
+                },
+                runningMode: runningMode,
+                numHands: 1
+            });
+            document.getElementById('status-text').innerText = "AI Ready - Start Camera";
+            document.getElementById('status-dot').style.background = "orange";
+        };
+        createGestureRecognizer();
+
+        // --- WEBCAM & LOGIC ---
+        document.getElementById('start-cam').addEventListener('click', enableCam);
+        document.getElementById('stop-cam').addEventListener('click', disableCam);
+
+        function enableCam() {
+            if (!gestureRecognizer) return;
+            if (webcamRunning) { disableCam(); return; }
+            webcamRunning = true;
+            navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+                video.srcObject = stream;
+                video.addEventListener("loadeddata", predictWebcam);
+                document.getElementById('status-dot').classList.add('active');
+                document.getElementById('status-text').innerText = "AI Active";
+                document.getElementById('start-cam').style.display = 'none';
+                document.getElementById('stop-cam').style.display = 'flex';
+            });
+        }
+        
+        function disableCam() {
+            webcamRunning = false;
+            if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
+            document.getElementById('status-dot').classList.remove('active');
+            document.getElementById('status-text').innerText = "AI Ready";
+            document.getElementById('start-cam').style.display = 'flex';
+            document.getElementById('stop-cam').style.display = 'none';
+            laser.style.display = 'none';
+        }
+
+        async function predictWebcam() {
+            if (runningMode === "IMAGE") {
+                runningMode = "VIDEO";
+                await gestureRecognizer.setOptions({ runningMode: "VIDEO" });
+            }
+            
+            if (!webcamRunning) return;
+
+            let nowInMs = Date.now();
+            if (video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                const results = gestureRecognizer.recognizeForVideo(video, nowInMs);
+
+                if (results.gestures.length > 0) {
+                    const categoryName = results.gestures[0][0].categoryName;
+                    const score = results.gestures[0][0].score;
+                    
+                    // --- 1. LASER POINTER LOGIC (Real-time, no cooldown) ---
+                    if (categoryName === "Pointing_Up" && score > 0.5) {
+                        // Get Index Finger Tip (Landmark 8)
+                        const tip = results.landmarks[0][8];
+                        
+                        // Calculate Screen Coordinates
+                        // Note: Webcam is mirrored, so we flip X using (1 - tip.x)
+                        const x = (1 - tip.x) * stage.offsetWidth;
+                        const y = tip.y * stage.offsetHeight;
+
+                        laser.style.left = `${x}px`;
+                        laser.style.top = `${y}px`;
+                        laser.style.display = 'block';
+                    } else {
+                        laser.style.display = 'none';
+                    }
+
+                    // --- 2. SLIDE CONTROL LOGIC (Debounced) ---
+                    if(score > 0.5 && (nowInMs - lastGestureTime) > COOLDOWN) {
+                        if (categoryName === "Victory") {
+                            onNextPage();
+                            lastGestureTime = nowInMs;
+                        } else if (categoryName === "Thumb_Up") {
+                            onPrevPage();
+                            lastGestureTime = nowInMs;
+                        } else if (categoryName === "Open_Palm") {
+                            onToggleFullscreen();
+                            lastGestureTime = nowInMs;
+                        }
+                    }
+                } else {
+                    // No hands detected
+                    laser.style.display = 'none';
+                }
+            }
+            window.requestAnimationFrame(predictWebcam);
+        }
+    </script>
+</body>
+</html>
