@@ -107,7 +107,7 @@ python -m http.server 8000
 Then open:
 
 ```text
-http://localhost:8000/index%20(1).html
+http://localhost:8000/index.html
 ```
 
 </details>
@@ -191,7 +191,7 @@ External libraries are loaded from CDN at runtime.
 ```text
 Handgesture-Controller/
 ├── 📄 README.md
-└── 🌐 index (1).html
+└── 🌐 index.html
 ```
 
 The main application is intentionally compact and contained in a single HTML file, including its styling and JavaScript logic.
@@ -270,7 +270,7 @@ Try:
 
 The project currently has no package manager or build pipeline. To modify it:
 
-1. Edit `index (1).html`.
+1. Edit `index.html`.
 2. Serve the repository locally.
 3. Open the app in a modern browser.
 4. Test PDF rendering.
