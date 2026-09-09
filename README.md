@@ -3,6 +3,7 @@
 > **Control PDF presentations with your hands.** Point, swipe, navigate, and enter an immersive presentation mode without touching the keyboard or mouse.
 
 <p align="center">
+  <a href="https://handgesturecontroller.netlify.app/"><img src="https://img.shields.io/badge/🚀%20Live%20Demo-HandGesture%20Controller-6366f1?style=for-the-badge" alt="Live Demo"></a>
   <a href="https://github.com/owaies/Handgesture-Controller"><img src="https://img.shields.io/github/stars/owaies/Handgesture-Controller?style=for-the-badge&logo=github" alt="GitHub stars"></a>
   <a href="https://github.com/owaies/Handgesture-Controller/network/members"><img src="https://img.shields.io/github/forks/owaies/Handgesture-Controller?style=for-the-badge&logo=github" alt="GitHub forks"></a>
   <a href="https://github.com/owaies/Handgesture-Controller/blob/main/LICENSE"><img src="https://img.shields.io/github/license/owaies/Handgesture-Controller?style=for-the-badge" alt="License"></a>
@@ -12,6 +13,10 @@
 
 <p align="center">
   <strong>🎤 A browser-based AI presentation controller powered by MediaPipe Gesture Recognizer.</strong>
+</p>
+
+<p align="center">
+  <a href="https://handgesturecontroller.netlify.app/"><strong>🌐 Try the Live Website →</strong></a>
 </p>
 
 ---
@@ -33,6 +38,18 @@ The project runs directly in the browser using client-side JavaScript. There is 
 | 🖥️ **Immersive mode** | Hide the sidebar for a cleaner presentation view |
 | 📷 **Webcam HUD** | Shows camera status and presentation state |
 | ⚡ **No build step** | The app is a standalone HTML experience |
+
+---
+
+## 🌐 Live Demo
+
+### 🚀 [Launch HandGesture Controller](https://handgesturecontroller.netlify.app/)
+
+Open the deployed application directly in your browser:
+
+**https://handgesturecontroller.netlify.app/**
+
+> 📷 Camera access is required for gesture recognition. For the best experience, use a modern browser over HTTPS and allow camera permission when prompted.
 
 ---
 
@@ -59,7 +76,16 @@ The project runs directly in the browser using client-side JavaScript. There is 
 ## 🚀 Quick Start
 
 <details open>
-<summary><strong>1. Open the project</strong></summary>
+<summary><strong>1. Try the live website</strong></summary>
+
+<br>
+
+Visit **[handgesturecontroller.netlify.app](https://handgesturecontroller.netlify.app/)** and start presenting immediately.
+
+</details>
+
+<details>
+<summary><strong>2. Run locally</strong></summary>
 
 <br>
 
@@ -69,13 +95,6 @@ Clone the repository:
 git clone https://github.com/owaies/Handgesture-Controller.git
 cd Handgesture-Controller
 ```
-
-</details>
-
-<details>
-<summary><strong>2. Run locally</strong></summary>
-
-<br>
 
 Because the project is a static HTML application, you can serve it with any simple local HTTP server.
 
@@ -90,8 +109,6 @@ Then open:
 ```text
 http://localhost:8000/index%20(1).html
 ```
-
-You can also open the HTML file directly in a modern browser, although serving it over HTTP is recommended for the smoothest browser/API behavior.
 
 </details>
 
@@ -315,6 +332,7 @@ No license file is currently present in the repository. If you intend others to 
 
 - GitHub: [@owaies](https://github.com/owaies)
 - Repository: [Handgesture-Controller](https://github.com/owaies/Handgesture-Controller)
+- Live Demo: [handgesturecontroller.netlify.app](https://handgesturecontroller.netlify.app/)
 
 ---
 
