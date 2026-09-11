@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PPTX Renderer Test</title>
+  <style>
+    body{font-family:system-ui;margin:0;padding:24px;background:#0b1020;color:#fff}
+    main{max-width:900px;margin:auto}
+    input,button{padding:12px;border-radius:10px;border:1px solid #334155}
+    button{cursor:pointer}
+    #result{white-space:pre-wrap;margin-top:16px}
+  </style>
+</head>
+<body>
+<main>
+  <h1>PPTX Renderer</h1>
+  <p>Upload a PowerPoint file to test the Hugging Face backend.</p>
+  <input id="file" type="file" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+  <button id="upload">Upload</button>
+  <pre id="result"></pre>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const API = params.get('api') || location.origin;
+const result = document.getElementById('result');
+document.getElementById('upload').onclick = async () => {
+  const file = document.getElementById('file').files[0];
+  if (!file) return result.textContent = 'Choose a .pptx first.';
+  const form = new FormData();
+  form.append('file', file);
+  result.textContent = 'Uploading…';
+  try {
+    const response = await fetch(API.replace(/\/$/, '') + '/api/pptx/upload', {method:'POST', body:form});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Upload failed');
+    result.textContent = JSON.stringify(data, null, 2);
+  } catch (error) {
+    result.textContent = error.message;
+  }
+};
+</script>
+</body>
+</html>
