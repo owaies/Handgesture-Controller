@@ -99,6 +99,16 @@
   .main{height:100vh;min-height:0;overflow:hidden;}
   .scroll{height:calc(100vh - 72px);min-height:0;flex:1 1 auto;overflow-y:scroll;overflow-x:hidden;scrollbar-width:auto;-webkit-overflow-scrolling:touch;}
 }
+
+/* Native desktop page scroll */
+@media (min-width:761px){
+  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;}
+  .app{height:auto!important;min-height:100vh!important;overflow:visible!important;}
+  .main{height:auto!important;min-height:100vh!important;overflow:visible!important;}
+  .scroll{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding-bottom:30px!important;}
+  .sidebar{position:sticky!important;top:0!important;height:100vh!important;}
+  .topbar{position:sticky!important;top:0!important;z-index:50!important;}
+}
 </style>
 
 <style id="desktop-scroll-repair">
