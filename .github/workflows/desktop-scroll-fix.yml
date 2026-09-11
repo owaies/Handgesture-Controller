@@ -1,0 +1,35 @@
+name: Fix desktop scrolling
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, '[desktop-scroll-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply desktop scroll CSS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          marker = '/* Desktop scrolling fix */'
+          if marker not in s:
+              css = '''\n/* Desktop scrolling fix */\n@media (min-width:761px){\n  html,body{height:100%;min-height:100%;overflow:hidden;}\n  .app{height:100vh;min-height:0;overflow:hidden;}\n  .main{height:100vh;min-height:0;overflow:hidden;}\n  .scroll{height:calc(100vh - 72px);min-height:0;flex:1 1 auto;overflow-y:scroll;overflow-x:hidden;scrollbar-width:auto;-webkit-overflow-scrolling:touch;}\n}\n'''
+              s = s.replace('</style>', css + '</style>', 1)
+              p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Fix desktop scrolling [desktop-scroll-fix]'
+          git push
+      - name: Remove this workflow
+        run: |
+          rm -f .github/workflows/desktop-scroll-fix.yml
+          git add -A
+          git diff --cached --quiet || git commit -m 'Remove desktop scroll fix workflow [desktop-scroll-fix]'
+          git push
