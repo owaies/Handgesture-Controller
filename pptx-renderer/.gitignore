@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.env
+/data/
+uploads/*
+output/*
+cache/*
+*.pptx
+*.pdf
+*.log
+.DS_Store
