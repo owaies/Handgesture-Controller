@@ -1,0 +1,35 @@
+name: Use native desktop scrolling
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, '[native-desktop-scroll]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Switch desktop to native page scrolling
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='/* Native desktop page scroll */'
+          if marker not in s:
+              css='''\n/* Native desktop page scroll */\n@media (min-width:761px){\n  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;}\n  .app{height:auto!important;min-height:100vh!important;overflow:visible!important;}\n  .main{height:auto!important;min-height:100vh!important;overflow:visible!important;}\n  .scroll{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;padding-bottom:30px!important;}\n  .sidebar{position:sticky!important;top:0!important;height:100vh!important;}\n  .topbar{position:sticky!important;top:0!important;z-index:50!important;}\n}\n'''
+              s=s.replace('</style>',css+'</style>',1)
+              p.write_text(s,encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Use native browser scrolling on desktop [native-desktop-scroll]'
+          git push
+      - name: Remove one-time workflow
+        run: |
+          rm -f .github/workflows/desktop-native-scroll.yml
+          git add -A
+          git diff --cached --quiet || git commit -m 'Remove native desktop scroll workflow [native-desktop-scroll]'
+          git push
