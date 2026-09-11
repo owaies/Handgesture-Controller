@@ -21,6 +21,20 @@
 @media(max-width:1100px){.sidebar{width:210px;flex-basis:210px}.grid{grid-template-columns:1fr}.right{display:grid;grid-template-columns:1fr 1fr;gap:16px}.gesture-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:760px){html,body{overflow:hidden}.app{display:block}.sidebar{display:none}.topbar{height:62px;padding:9px 13px}.top-title{display:none}.mobile-brand{display:flex}.scroll{padding:12px 12px 88px}.grid{display:block}.stack{gap:12px}.right{display:block}.viewer{min-height:0;padding:9px}.viewer-head{margin-bottom:8px}.viewer-title{font-size:11px}.viewer-actions{display:none}#stage{min-height:300px}.upload{min-height:200px}.camera-card{padding:11px}.camera{height:210px}.gesture-grid{grid-template-columns:repeat(2,1fr)}.gesture-card{min-height:125px;padding:12px}.metrics{grid-template-columns:1fr}.bottom{position:fixed;left:10px;right:10px;bottom:10px;height:64px;border:1px solid rgba(148,163,184,.16);border-radius:18px;background:rgba(9,17,34,.88);backdrop-filter:blur(18px);display:grid;grid-template-columns:repeat(4,1fr);z-index:40;box-shadow:0 18px 60px rgba(0,0,0,.42)}.bottom button{min-height:0;padding:7px 4px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;font-size:9px;text-align:center}.bottom button i{font-size:16px}.bottom .fab{background:linear-gradient(135deg,#5b66f5,#7c3aed);color:#fff;border-radius:16px;margin:7px;box-shadow:0 8px 22px rgba(99,102,241,.3)}.status{padding:7px 9px;font-size:10px}.fullscreen-layer canvas{max-width:100%;max-height:100%}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Mobile interaction hardening */
+@media (max-width:760px){
+  html,body{height:100%;min-height:100%;overflow:hidden;}
+  .app{height:100dvh;min-height:100dvh;display:block;overflow:hidden;}
+  .main{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+  .scroll{height:calc(100dvh - 62px);min-height:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding-bottom:100px;touch-action:pan-y;}
+  .bottom{z-index:100;touch-action:manipulation;}
+  .bottom button,.upload label,.primary,.danger,.secondary,.icon{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .camera-card{scroll-margin-top:12px;}
+  .fullscreen-layer{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;z-index:2147483647!important;background:#000!important;}
+  .fullscreen-layer canvas{max-width:100vw!important;max-height:100dvh!important;width:auto!important;height:auto!important;}
+}
+
 </style>
 </head>
 <body>
@@ -84,5 +98,48 @@ function disableCam(){webcamRunning=false;if(video.srcObject)video.srcObject.get
 async function predictWebcam(){if(!webcamRunning)return;if(video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;const results=gestureRecognizer.recognizeForVideo(video,performance.now());handleResults(results)}requestAnimationFrame(predictWebcam)}
 window.addEventListener('keydown',e=>{if(e.key==='ArrowRight')nextPage();else if(e.key==='ArrowLeft')prevPage();else if(e.key.toLowerCase()==='f')toggleFullscreen();else if(e.key.toLowerCase()==='c')webcamRunning?disableCam():enableCam();else if(e.key==='Escape'&&fullscreen)exitPresentationFullscreen()});
 </script>
+
+<script>
+// Mobile controls: use event delegation so the fixed bottom bar remains reliable on touch devices.
+(function(){
+  function scrollToId(id){
+    var el=document.querySelector(id);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest && e.target.closest('.bottom button');
+    if(!btn) return;
+    var action=btn.getAttribute('data-action');
+    if(action==='camera'){
+      e.preventDefault();
+      scrollToId('#camera-section');
+      if(typeof enableCam==='function' && !window.webcamRunning) enableCam();
+    }else if(action==='upload'){
+      e.preventDefault();
+      var input=document.getElementById('file-input') || document.querySelector('input[type=file]');
+      if(input) input.click();
+    }else if(action==='fullscreen'){
+      e.preventDefault();
+      if(typeof onToggleFullscreen==='function') onToggleFullscreen();
+    }
+  },{passive:false});
+
+  function fixMobileLayout(){
+    if(window.innerWidth<=760){
+      document.documentElement.style.height='100%';
+      document.body.style.height='100%';
+      var app=document.querySelector('.app'), main=document.querySelector('.main'), scroll=document.querySelector('.scroll');
+      if(app) app.style.height='100dvh';
+      if(main) main.style.height='100dvh';
+      if(scroll){scroll.style.height='calc(100dvh - 62px)';scroll.style.overflowY='auto';scroll.style.webkitOverflowScrolling='touch';}
+    }
+  }
+  window.addEventListener('resize',fixMobileLayout,{passive:true});
+  window.addEventListener('orientationchange',function(){setTimeout(fixMobileLayout,150);},{passive:true});
+  document.addEventListener('DOMContentLoaded',fixMobileLayout);
+  setTimeout(fixMobileLayout,0);
+})();
+</script>
+
 </body>
 </html>
