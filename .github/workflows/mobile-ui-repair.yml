@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply responsive PDF fitting
+      - name: Fix PDF viewer sizing
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -22,92 +22,61 @@ jobs:
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
-          css=r'''<style id="master-reference-layout">
+          # Replace the previous fixed-height mobile PDF rules with rules that let
+          # the rendered PDF determine the stage height.
+          css=r'''<style id="dynamic-pdf-viewer-fix">
           @media(max-width:760px){
-            html,body{min-width:0!important;width:100%!important;overflow-x:hidden!important}
-            .app,.main{width:100%!important;min-width:0!important;max-width:100%!important}
-            .scroll{padding:0 20px 96px!important;width:100%!important;max-width:100%!important}
-            .layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-auto-flow:row!important;gap:14px!important;width:100%!important;max-width:none!important;margin:0!important;align-items:stretch!important}
-            .layout>.stack,.layout>.right{display:contents!important}
-            .ref-hero{display:none!important}
-
-            .viewer{grid-column:1/-1!important;grid-row:1!important;width:100%!important;height:clamp(330px,78vw,450px)!important;min-height:330px!important;padding:11px!important;order:1!important}
+            .viewer{height:auto!important;min-height:0!important;width:100%!important}
+            .viewer:not(.pdf-loaded){height:clamp(300px,82vw,370px)!important;min-height:300px!important}
             .viewer.pdf-loaded{height:auto!important;min-height:0!important}
-            .viewer-head{height:31px!important;margin:0 1px 8px!important}
-            .viewer-title{font-size:11px!important}.viewer-actions{gap:6px!important}.viewer-actions .icon{width:34px!important;height:34px!important;border-radius:10px!important}
-            #stage{width:100%!important;height:calc(100% - 40px)!important;min-height:0!important;border-radius:15px!important;background:radial-gradient(ellipse at 75% 25%,rgba(255,25,59,.14),transparent 46%),#030304!important}
-            .viewer.pdf-loaded #stage{height:auto!important;min-height:0!important;display:block!important;overflow:hidden!important;padding:0!important}
-            #stage canvas{position:relative!important;z-index:2!important;display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;margin:0!important;border-radius:5px!important}
-            .viewer.pdf-loaded #stage canvas{width:100%!important;height:auto!important;max-width:100%!important;max-height:none!important}
+            .viewer.pdf-loaded #stage{height:auto!important;min-height:0!important;display:block!important;overflow:hidden!important;padding:0!important;aspect-ratio:auto!important}
+            .viewer.pdf-loaded #stage canvas{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;margin:0!important;object-fit:contain!important;border-radius:5px!important}
             .viewer.pdf-loaded #stage:after{display:none!important}
-            .hud{top:9px!important;right:9px!important}.stage-corner{top:9px!important;left:9px!important}
+            .viewer.pdf-loaded .empty{display:none!important}
             .viewer.pdf-loaded .hud,.viewer.pdf-loaded .stage-corner{position:absolute!important}
-            .empty{max-width:360px!important;padding:18px!important}.empty-icon{width:58px!important;height:58px!important}.empty h3{font-size:19px!important}.empty p{font-size:10px!important;line-height:1.55!important}
-
-            .upload{grid-column:1/2!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;padding:14px!important;order:2!important}
-            .camera-card{grid-column:2/3!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;order:3!important}
-            .camera-card .camera{height:76px!important;min-height:76px!important}.camera-actions{margin-top:6px!important}.camera-actions .primary,.camera-actions .danger{height:34px!important;min-height:34px!important;font-size:9px!important}
-            .right .metric-card:nth-child(1){grid-column:1/2!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:4!important}
-            .gestures{grid-column:2/3!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:5!important}
-            .right .metric-card:nth-child(2){grid-column:1/2!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:6!important}
-            .right .metric-card:nth-child(3){grid-column:2/3!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:7!important}
-            .right .metric-card:nth-child(4){grid-column:1/-1!important;grid-row:5!important;height:126px!important;min-height:126px!important;order:8!important}
-            .gesture-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.gesture-card{min-height:64px!important;padding:8px!important;border-radius:12px!important}.gesture-card .gi{font-size:19px!important;margin-bottom:1px!important}.gesture-card b{font-size:8px!important}.gesture-card span{font-size:7px!important}
-            .metric-card{padding:13px!important}.metric-top{font-size:10px!important}.metric-big{font-size:20px!important}.file-name{font-size:9px!important}.confidence{margin-top:9px!important}.ring{width:56px!important;height:56px!important;flex-basis:56px!important}
-            .bottom{left:20px!important;right:20px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;width:auto!important;height:62px!important;z-index:999!important}
           }
           @media(max-width:430px){
-            .scroll{padding-left:16px!important;padding-right:16px!important}.layout{gap:12px!important}
-            .viewer{height:clamp(300px,82vw,370px)!important;min-height:300px!important}
-            .viewer.pdf-loaded{height:auto!important;min-height:0!important}
-            .upload,.camera-card{height:132px!important;min-height:132px!important}.camera-card .camera{height:66px!important;min-height:66px!important}
-            .right .metric-card:nth-child(1),.gestures{height:148px!important;min-height:148px!important}
-            .right .metric-card:nth-child(2),.right .metric-card:nth-child(3),.right .metric-card:nth-child(4){height:116px!important;min-height:116px!important}
+            .viewer:not(.pdf-loaded){height:clamp(285px,82vw,360px)!important;min-height:285px!important}
           }
           </style>'''
-
-          s=re.sub(r'<style id="master-reference-layout">.*?</style>','',s,flags=re.S)
+          s=re.sub(r'<style id="dynamic-pdf-viewer-fix">.*?</style>','',s,flags=re.S)
           s=s.replace('</head>',css+'\n</head>',1)
 
-          js=r'''<script id="responsive-pdf-fit">
-          (() => {
-            const init = () => {
-              const viewer = document.querySelector('.viewer');
-              const stage = document.getElementById('stage');
-              if (!viewer || !stage) return;
+          # The old renderPage used stage.clientHeight to calculate the PDF scale,
+          # which made the canvas depend on a fixed-height container. On mobile,
+          # calculate scale from width only, then the canvas's natural aspect ratio
+          # determines the stage height.
+          pattern=r'async function renderPage\(num\)\{.*?\n\}async function renderFullscreenPage'
+          replacement='''async function renderPage(num){if(!pdfDoc||isRendering)return;isRendering=true;try{const page=await pdfDoc.getPage(num);const base=page.getViewport({scale:1});const mobile=window.matchMedia(\'(max-width:760px)\').matches;if(mobile){const width=Math.max(1,stage.clientWidth);const scale=Math.min(2.5,width/base.width);const vp=page.getViewport({scale});pdfCanvas.width=Math.floor(vp.width);pdfCanvas.height=Math.floor(vp.height);stage.style.setProperty(\'--pdf-stage-height\',`${Math.ceil(vp.height*(stage.clientWidth/vp.width))}px`);viewerClassSync();await page.render({canvasContext:pdfCtx,viewport:vp}).promise}else{const maxW=Math.max(320,stage.clientWidth-32),maxH=Math.max(220,stage.clientHeight-32);const scale=Math.min(1.7,maxW/base.width,maxH/base.height);const vp=page.getViewport({scale});pdfCanvas.width=Math.floor(vp.width);pdfCanvas.height=Math.floor(vp.height);await page.render({canvasContext:pdfCtx,viewport:vp}).promise}}catch(err){console.error(err)}finally{isRendering=false}}async function renderFullscreenPage'''
+          if not re.search(pattern,s,flags=re.S):
+              raise SystemExit('renderPage pattern not found')
+          s=re.sub(pattern,replacement,s,count=1,flags=re.S)
 
-              const syncPdfFit = () => {
-                const canvas = stage.querySelector('canvas');
-                const hasRenderedPdf = !!canvas && canvas.width > 0 && canvas.height > 0;
-                viewer.classList.toggle('pdf-loaded', hasRenderedPdf);
-                if (hasRenderedPdf) {
-                  const ratio = canvas.width / canvas.height;
-                  if (Number.isFinite(ratio) && ratio > 0) {
-                    stage.style.aspectRatio = `${ratio}`;
-                  }
-                } else {
-                  stage.style.removeProperty('aspect-ratio');
-                }
-              };
-
-              new MutationObserver(syncPdfFit).observe(stage, {childList:true,subtree:true,attributes:true,attributeFilter:['width','height','style']});
-              window.addEventListener('resize', syncPdfFit, {passive:true});
-              window.addEventListener('orientationchange', () => setTimeout(syncPdfFit, 100), {passive:true});
-              setInterval(syncPdfFit, 500);
-              syncPdfFit();
-            };
-            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
-            else init();
-          })();
+          # Keep the viewer class synchronized from the actual PDF canvas.
+          helper=r'''<script id="pdf-viewer-class-sync">
+          function viewerClassSync(){
+            const v=document.querySelector('.viewer');
+            const c=document.getElementById('pdf-render');
+            if(!v||!c)return;
+            const loaded=c.width>0&&c.height>0;
+            v.classList.toggle('pdf-loaded',loaded);
+            if(loaded&&window.matchMedia('(max-width:760px)').matches){
+              const ratio=c.height/c.width;
+              const w=document.getElementById('stage').clientWidth;
+              if(ratio>0&&w>0)document.getElementById('stage').style.setProperty('--pdf-stage-height',`${Math.ceil(w*ratio)}px`);
+            }
+          }
+          window.addEventListener('resize',()=>setTimeout(viewerClassSync,50),{passive:true});
           </script>'''
-          s=s.replace('</body>',js+'\n</body>',1)
+          s=re.sub(r'<script id="pdf-viewer-class-sync">.*?</script>','',s,flags=re.S)
+          s=s.replace('</body>',helper+'\n</body>',1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit responsive PDF fit
+      - name: Commit PDF viewer fix
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Make PDF viewer fit document height responsively'
+          git commit -m 'Fix PDF viewer to fit every page ratio'
           git push
