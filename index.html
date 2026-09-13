@@ -103,6 +103,7 @@ body:after{width:390px;height:220px;left:32%;bottom:-85px;background:radial-grad
 @keyframes refOrb2{from{transform:translate3d(0,4px,0) scale(.94)}to{transform:translate3d(-30px,-12px,0) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){body:before,body:after{animation:none!important}}
 </style>
+
 <style id="master-reference-layout">
 @media(max-width:760px){
   html,body{min-width:0!important;width:100%!important;overflow-x:hidden!important}
@@ -111,12 +112,20 @@ body:after{width:390px;height:220px;left:32%;bottom:-85px;background:radial-grad
   .layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-auto-flow:row!important;gap:14px!important;width:100%!important;max-width:none!important;margin:0!important;align-items:stretch!important}
   .layout>.stack,.layout>.right{display:contents!important}
   .ref-hero{display:none!important}
+
   .viewer{grid-column:1/-1!important;grid-row:1!important;width:100%!important;height:clamp(330px,78vw,450px)!important;min-height:330px!important;padding:11px!important;order:1!important}
-  .viewer-head{height:31px!important;margin:0 1px 8px!important}.viewer-title{font-size:11px!important}.viewer-actions{gap:6px!important}.viewer-actions .icon{width:34px!important;height:34px!important;border-radius:10px!important}
+  .viewer.pdf-loaded{height:auto!important;min-height:0!important}
+  .viewer-head{height:31px!important;margin:0 1px 8px!important}
+  .viewer-title{font-size:11px!important}.viewer-actions{gap:6px!important}.viewer-actions .icon{width:34px!important;height:34px!important;border-radius:10px!important}
   #stage{width:100%!important;height:calc(100% - 40px)!important;min-height:0!important;border-radius:15px!important;background:radial-gradient(ellipse at 75% 25%,rgba(255,25,59,.14),transparent 46%),#030304!important}
-  #stage canvas{max-width:94%!important;max-height:calc(100% - 18px)!important;width:auto!important;height:auto!important}
+  .viewer.pdf-loaded #stage{height:auto!important;min-height:0!important;display:block!important;overflow:hidden!important;padding:0!important}
+  #stage canvas{position:relative!important;z-index:2!important;display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;margin:0!important;border-radius:5px!important}
+  .viewer.pdf-loaded #stage canvas{width:100%!important;height:auto!important;max-width:100%!important;max-height:none!important}
+  .viewer.pdf-loaded #stage:after{display:none!important}
   .hud{top:9px!important;right:9px!important}.stage-corner{top:9px!important;left:9px!important}
+  .viewer.pdf-loaded .hud,.viewer.pdf-loaded .stage-corner{position:absolute!important}
   .empty{max-width:360px!important;padding:18px!important}.empty-icon{width:58px!important;height:58px!important}.empty h3{font-size:19px!important}.empty p{font-size:10px!important;line-height:1.55!important}
+
   .upload{grid-column:1/2!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;padding:14px!important;order:2!important}
   .camera-card{grid-column:2/3!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;order:3!important}
   .camera-card .camera{height:76px!important;min-height:76px!important}.camera-actions{margin-top:6px!important}.camera-actions .primary,.camera-actions .danger{height:34px!important;min-height:34px!important;font-size:9px!important}
@@ -132,6 +141,7 @@ body:after{width:390px;height:220px;left:32%;bottom:-85px;background:radial-grad
 @media(max-width:430px){
   .scroll{padding-left:16px!important;padding-right:16px!important}.layout{gap:12px!important}
   .viewer{height:clamp(300px,82vw,370px)!important;min-height:300px!important}
+  .viewer.pdf-loaded{height:auto!important;min-height:0!important}
   .upload,.camera-card{height:132px!important;min-height:132px!important}.camera-card .camera{height:66px!important;min-height:66px!important}
   .right .metric-card:nth-child(1),.gestures{height:148px!important;min-height:148px!important}
   .right .metric-card:nth-child(2),.right .metric-card:nth-child(3),.right .metric-card:nth-child(4){height:116px!important;min-height:116px!important}
@@ -243,6 +253,37 @@ async function enableCam(){if(!gestureRecognizer){setStatus('AI still loading...
 function disableCam(){webcamRunning=false;if(video.srcObject)video.srcObject.getTracks().forEach(t=>t.stop());video.srcObject=null;overlayCtx.clearRect(0,0,overlay.width,overlay.height);laser.style.display='none';$('start-cam').style.display='inline-flex';$('stop-cam').style.display='none';$('camera-status').textContent='Camera off';$('camera-live').textContent='Camera idle';setStatus('AI Ready - Start Camera',false);updateGestureUI(null,0)}
 async function predictWebcam(){if(!webcamRunning)return;if(video.currentTime!==lastVideoTime){lastVideoTime=video.currentTime;const results=gestureRecognizer.recognizeForVideo(video,performance.now());handleResults(results)}requestAnimationFrame(predictWebcam)}
 window.addEventListener('keydown',e=>{if(e.key==='ArrowRight')nextPage();else if(e.key==='ArrowLeft')prevPage();else if(e.key.toLowerCase()==='f')toggleFullscreen();else if(e.key.toLowerCase()==='c')webcamRunning?disableCam():enableCam();else if(e.key==='Escape'&&fullscreen)exitPresentationFullscreen()});
+</script>
+<script id="responsive-pdf-fit">
+(() => {
+  const init = () => {
+    const viewer = document.querySelector('.viewer');
+    const stage = document.getElementById('stage');
+    if (!viewer || !stage) return;
+
+    const syncPdfFit = () => {
+      const canvas = stage.querySelector('canvas');
+      const hasRenderedPdf = !!canvas && canvas.width > 0 && canvas.height > 0;
+      viewer.classList.toggle('pdf-loaded', hasRenderedPdf);
+      if (hasRenderedPdf) {
+        const ratio = canvas.width / canvas.height;
+        if (Number.isFinite(ratio) && ratio > 0) {
+          stage.style.aspectRatio = `${ratio}`;
+        }
+      } else {
+        stage.style.removeProperty('aspect-ratio');
+      }
+    };
+
+    new MutationObserver(syncPdfFit).observe(stage, {childList:true,subtree:true,attributes:true,attributeFilter:['width','height','style']});
+    window.addEventListener('resize', syncPdfFit, {passive:true});
+    window.addEventListener('orientationchange', () => setTimeout(syncPdfFit, 100), {passive:true});
+    setInterval(syncPdfFit, 500);
+    syncPdfFit();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+  else init();
+})();
 </script>
 </body>
 </html>
