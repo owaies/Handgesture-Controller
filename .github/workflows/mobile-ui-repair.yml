@@ -28,11 +28,41 @@ jobs:
           if marker in html:
               raise SystemExit(0)
 
-          # Fix stale/older empty-state copy if it is still present in a cached-style build.
           html = html.replace('Begin presenting', 'Ready when you are')
           html = html.replace('Upload a PDF and control it with your hands.', 'Upload a PDF, start the camera, and control the presentation with simple hand gestures.')
 
-          repair_css = r'''\n<style id="mobile-layout-repair">\n@media (max-width:760px){\n  html,body{width:100%;max-width:100%;overflow-x:hidden!important;}\n  .app,.main,.scroll,.layout,.stack,.card{max-width:100%;min-width:0;}\n  .topbar{width:100%;box-sizing:border-box;}\n  .mobile-brand{min-width:0;overflow:hidden;}\n  .mobile-brand strong,.mobile-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}\n  .status{flex:0 0 auto;max-width:43vw;overflow:hidden;}\n  .scroll{width:100%;box-sizing:border-box;padding-left:10px!important;padding-right:10px!important;}\n  .upload{width:100%;overflow:hidden;}\n  .viewer{width:100%;overflow:hidden;}\n  #stage{width:100%!important;min-width:0!important;display:grid!important;place-items:center!important;align-items:center!important;justify-items:center!important;overflow:hidden!important;}\n  #empty-state{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;inset:auto!important;transform:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:min(100%,320px)!important;max-width:320px!important;margin:0 auto!important;padding:20px 14px!important;text-align:center!important;}\n  #empty-state .empty-icon{margin:0 auto 13px!important;flex:0 0 auto;}\n  #empty-state h3,#empty-state p{width:100%!important;margin-left:0!important;margin-right:0!important;text-align:center!important;overflow-wrap:anywhere;}\n  #empty-state h3{font-size:17px!important;line-height:1.25!important;}\n  #empty-state p{font-size:11px!important;line-height:1.6!important;}\n  #stage-corner{max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}\n  .gesture-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))!important;}\n  .gesture-card{min-width:0;overflow:hidden;}\n  .bottom{left:8px!important;right:8px!important;width:auto!important;}\n}\n@media (max-width:390px){\n  .scroll{padding-left:8px!important;padding-right:8px!important;}\n  #stage{min-height:300px!important;}\n  #empty-state{width:min(100%,290px)!important;padding:16px 10px!important;}\n  #empty-state h3{font-size:16px!important;}\n  #empty-state p{font-size:10px!important;}\n}\n</style>\n'''
+          repair_css = '''
+          <style id="mobile-layout-repair">
+          @media (max-width:760px){
+            html,body{width:100%;max-width:100%;overflow-x:hidden!important;}
+            .app,.main,.scroll,.layout,.stack,.card{max-width:100%;min-width:0;}
+            .topbar{width:100%;box-sizing:border-box;}
+            .mobile-brand{min-width:0;overflow:hidden;}
+            .mobile-brand strong,.mobile-brand span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .status{flex:0 0 auto;max-width:43vw;overflow:hidden;}
+            .scroll{width:100%;box-sizing:border-box;padding-left:10px!important;padding-right:10px!important;}
+            .upload{width:100%;overflow:hidden;}
+            .viewer{width:100%;overflow:hidden;}
+            #stage{width:100%!important;min-width:0!important;display:grid!important;place-items:center!important;align-items:center!important;justify-items:center!important;overflow:hidden!important;}
+            #empty-state{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;inset:auto!important;transform:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;width:min(100%,320px)!important;max-width:320px!important;margin:0 auto!important;padding:20px 14px!important;text-align:center!important;}
+            #empty-state .empty-icon{margin:0 auto 13px!important;flex:0 0 auto;}
+            #empty-state h3,#empty-state p{width:100%!important;margin-left:0!important;margin-right:0!important;text-align:center!important;overflow-wrap:anywhere;}
+            #empty-state h3{font-size:17px!important;line-height:1.25!important;}
+            #empty-state p{font-size:11px!important;line-height:1.6!important;}
+            .stage-corner{max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .gesture-grid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+            .gesture-card{min-width:0;overflow:hidden;}
+            .bottom{left:8px!important;right:8px!important;width:auto!important;}
+          }
+          @media (max-width:390px){
+            .scroll{padding-left:8px!important;padding-right:8px!important;}
+            #stage{min-height:300px!important;}
+            #empty-state{width:min(100%,290px)!important;padding:16px 10px!important;}
+            #empty-state h3{font-size:16px!important;}
+            #empty-state p{font-size:10px!important;}
+          }
+          </style>
+          '''
 
           html = html.replace('</head>', repair_css + '</head>', 1)
           path.write_text(html, encoding='utf-8')
