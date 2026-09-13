@@ -1,4 +1,4 @@
-name: Fix Reference Mobile Layout
+name: Apply Master Reference Layout
 
 on:
   push:
@@ -10,82 +10,60 @@ permissions:
   contents: write
 
 jobs:
-  fix-mobile-reference:
+  master-reference:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Rebuild mobile reference composition
+      - name: Apply master mobile bento layout
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          hero = '''<section class="ref-hero" aria-label="Gesture Presenter introduction">
-            <div class="ref-hero-copy">
-              <div class="ref-kicker">TURN GESTURES INTO IMPACT</div>
-              <h2>Present<br><span>Smarter.</span></h2>
-              <p>Upload your slides, start the camera, and control<br class="desktop-break"> your presentation with simple hand gestures.</p>
-            </div>
-            <div class="ref-hero-hand" aria-hidden="true"><i class="fa-solid fa-hand"></i></div>
-            <div class="ref-ai-pill"><i class="fa-solid fa-sparkles"></i> AI Powered</div>
-          </section>'''
-
-          s = re.sub(r'<section class="ref-hero".*?</section>', '', s, flags=re.S)
-          s = re.sub(r'(<div[^>]*class=["\']layout["\'][^>]*>)', lambda m: m.group(1) + hero, s, count=1)
-
-          css = r'''<style id="reference-mobile-final">
-          :root{--ref-bg:#070608;--ref-red:#ff173b;--ref-red2:#ff3b55;--ref-coral:#ff6973;--ref-green:#20e394;--ref-line:rgba(255,255,255,.13);--ref-muted:rgba(255,255,255,.64)}
-          html,body{background:#070608!important}
-          body{color:#fff!important;overflow-x:hidden!important;background-image:radial-gradient(470px 410px at 91% 4%,rgba(255,31,59,.27),transparent 68%),radial-gradient(430px 500px at 3% 67%,rgba(165,0,29,.17),transparent 70%),radial-gradient(430px 350px at 92% 88%,rgba(255,31,61,.18),transparent 70%),linear-gradient(145deg,#050506 0%,#0c080a 45%,#050506 100%)!important}
-          body:before,body:after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;mix-blend-mode:screen;filter:blur(28px);will-change:transform}
-          body:before{width:280px;height:280px;right:-75px;top:95px;background:radial-gradient(circle at 35% 35%,rgba(255,76,92,.85),rgba(192,0,37,.25) 48%,transparent 73%);animation:refOrb 11s ease-in-out infinite alternate}
-          body:after{width:390px;height:220px;left:32%;bottom:-85px;background:radial-gradient(ellipse,rgba(255,28,59,.50),rgba(130,0,25,.13) 50%,transparent 74%);animation:refOrb2 14s ease-in-out infinite alternate}
-
-          .app{display:block!important;min-height:100vh!important;background:transparent!important}.sidebar{display:none!important}.main{width:100%!important;min-width:0!important}
-          .topbar{height:72px!important;padding:9px 20px!important;position:sticky!important;top:0!important;z-index:100!important;background:rgba(5,5,6,.78)!important;border-bottom:1px solid rgba(255,255,255,.10)!important;backdrop-filter:blur(26px) saturate(130%)!important}
-          .top-title{display:none!important}.mobile-brand{display:flex!important;align-items:center!important;gap:10px!important}.mobile-brand .brand-mark{width:44px!important;height:44px!important;flex:0 0 44px!important;border-radius:14px!important;background:linear-gradient(145deg,#ff5967,#ff123b 58%,#b40020)!important;border:1px solid rgba(255,255,255,.25)!important;box-shadow:0 12px 30px rgba(255,18,58,.32),inset 0 1px rgba(255,255,255,.35)!important}.mobile-brand strong{font-size:17px!important;letter-spacing:-.5px!important}.mobile-brand span{display:block!important;font-size:10px!important;color:var(--ref-muted)!important;margin-top:2px!important}
-          .status{min-height:38px!important;padding:0 12px!important;border:1px solid rgba(255,255,255,.15)!important;border-radius:999px!important;background:rgba(9,8,10,.68)!important;font-size:10px!important;box-shadow:0 10px 30px rgba(0,0,0,.25)!important}.status-dot{width:9px!important;height:9px!important;background:var(--ref-red)!important;box-shadow:0 0 14px rgba(255,23,59,.75)!important}.counter{display:none!important}
-
-          .scroll{padding:0 22px 96px!important}.layout{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;width:100%!important;max-width:none!important;margin:0!important;align-items:stretch!important}.layout>.stack{display:contents!important}
-          .card,.side-card{position:relative!important;overflow:hidden!important;border:1px solid var(--ref-line)!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(29,18,23,.75),rgba(8,7,9,.76))!important;box-shadow:0 22px 65px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.075)!important;backdrop-filter:blur(22px) saturate(125%)!important}
-          .card:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.06),transparent 26%,transparent 72%,rgba(255,35,61,.055))}
-
-          .ref-hero{grid-column:1/-1!important;grid-row:1!important;min-width:0!important;height:270px!important;position:relative!important;overflow:hidden!important;display:block!important;padding:27px 0 0 4px!important;box-sizing:border-box!important}
-          .ref-hero-copy{position:relative;z-index:5;width:53%}.ref-kicker{font-size:11px;letter-spacing:.35px;color:rgba(255,155,164,.76);margin-bottom:6px}.ref-hero h2{font-size:45px;line-height:.93;letter-spacing:-2px;margin:0;font-weight:800}.ref-hero h2 span{color:#ff6873}.ref-hero p{font-size:11px;line-height:1.55;color:var(--ref-muted);margin:12px 0 0}
-          .ref-hero-hand{position:absolute;z-index:2;right:-2%;top:5px;width:57%;height:245px;display:grid;place-items:center;transform:rotate(-9deg)}.ref-hero-hand i{font-size:178px;color:rgba(255,255,255,.12);filter:drop-shadow(0 0 10px rgba(255,85,100,.65)) drop-shadow(0 0 35px rgba(255,22,56,.45));text-shadow:0 0 28px rgba(255,49,69,.34)}.ref-ai-pill{position:absolute;right:3%;top:40px;z-index:6;padding:8px 11px;border:1px solid rgba(255,255,255,.17);border-radius:999px;background:rgba(8,7,9,.56);font-size:9px;color:#fff;backdrop-filter:blur(12px)}.ref-ai-pill i{color:#ff6a72;margin-right:5px}
-
-          .upload{grid-column:1/2!important;grid-row:2!important;min-height:132px!important;height:132px!important;padding:15px!important;display:grid!important;grid-template-columns:40px minmax(0,1fr) 34px!important;grid-template-rows:auto auto auto!important;column-gap:9px!important;align-content:center!important;text-align:left!important;background:radial-gradient(220px 140px at 75% 25%,rgba(255,24,60,.28),transparent 70%),linear-gradient(145deg,rgba(255,23,58,.68),rgba(75,10,24,.58))!important}.upload:before{inset:8px!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:15px!important}.upload-icon{grid-row:1/4!important;width:40px!important;height:40px!important;border-radius:12px!important;font-size:17px!important;background:linear-gradient(145deg,#ff5966,#ff123b 60%,#b60020)!important;color:#fff!important;border:1px solid rgba(255,255,255,.24)!important;box-shadow:0 12px 28px rgba(255,16,57,.34)!important;animation:none!important}.upload h3{font-size:14px!important;margin:0 0 2px!important}.upload p{font-size:8px!important;line-height:1.4!important;margin:0 0 5px!important;color:rgba(255,255,255,.67)!important}.upload small{font-size:7px!important;margin:0!important;color:rgba(255,255,255,.45)!important}.upload label{grid-column:3!important;grid-row:1/4!important;align-self:center!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;border-radius:50%!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:none!important;font-size:0!important}.upload label:after{content:"→";font-size:18px;color:#fff}
-
-          .camera-card{grid-column:2/3!important;grid-row:2!important;height:132px!important;min-height:132px!important;padding:10px!important}.camera-card .metric{font-size:8px!important;margin:0 0 5px!important}.camera-card .camera{height:68px!important;min-height:68px!important;border-radius:12px!important}.camera-actions{margin-top:5px!important}.camera-actions .primary,.camera-actions .danger{width:100%!important;min-height:31px!important;height:31px!important;border-radius:10px!important;font-size:8px!important;padding:0 8px!important}.camera-badge{font-size:7px!important;padding:5px 7px!important}.camera{background:#030304!important;border-color:rgba(255,255,255,.11)!important}
-
-          .right .metric-card:nth-child(1){grid-column:1/2!important;grid-row:3!important;height:150px!important;min-height:150px!important}.gestures{grid-column:2/3!important;grid-row:3!important;height:150px!important;min-height:150px!important;padding:10px!important}.right .metric-card:nth-child(2){grid-column:1/2!important;grid-row:4!important;height:116px!important;min-height:116px!important}.right .metric-card:nth-child(3){grid-column:1/2!important;grid-row:5!important;height:116px!important;min-height:116px!important}.right .metric-card:nth-child(4){grid-column:2/3!important;grid-row:5!important;height:116px!important;min-height:116px!important}
-          .metric-card{padding:12px!important}.metric-top{font-size:9px!important}.metric-big{font-size:19px!important;margin-top:13px!important}.file-name{font-size:8px!important}.confidence{gap:9px!important;margin-top:9px!important}.ring{width:53px!important;height:53px!important;flex-basis:53px!important;background:conic-gradient(var(--ref-red2) 0 0%,rgba(255,255,255,.08) 0 100%)!important}.ring:after{background:#120b0f!important}.confidence-copy{font-size:8px!important}.confidence small{font-size:7px!important}
-          .section-head{margin-bottom:7px!important}.section-head span:first-child{font-size:9px!important}.section-head span:last-child{font-size:7px!important}.gesture-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}.gesture-card{min-height:60px!important;padding:7px!important;border-radius:11px!important;background:rgba(35,19,25,.60)!important}.gesture-card .gi{font-size:18px!important;margin-bottom:1px!important}.gesture-card b{font-size:7px!important}.gesture-card span{font-size:6px!important}.gesture-card.active,.gesture-card:hover{background:rgba(91,13,29,.52)!important;border-color:rgba(255,67,86,.35)!important}
-
-          .viewer{grid-column:1/-1!important;grid-row:6!important;padding:10px!important;min-height:285px!important}.viewer-head{margin-bottom:7px!important}.viewer-title{font-size:9px!important}.viewer-actions{gap:5px!important}.viewer-actions .icon{width:31px!important;height:31px!important;border-radius:9px!important}#stage{height:250px!important;min-height:250px!important;border-radius:14px!important;background:radial-gradient(ellipse at 72% 26%,rgba(255,25,59,.12),transparent 45%),#050506!important;border-color:rgba(255,255,255,.12)!important}.empty-icon{width:50px!important;height:50px!important;background:rgba(255,31,62,.10)!important;border-color:rgba(255,71,89,.22)!important;color:#fff!important}.empty h3{font-size:16px!important}.empty p{font-size:9px!important}
-
-          .bottom{display:flex!important;position:fixed!important;z-index:120!important;left:20px!important;right:20px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;height:62px!important;padding:4px!important;border-radius:21px!important;background:rgba(8,7,9,.82)!important;border:1px solid rgba(255,255,255,.15)!important;backdrop-filter:blur(28px) saturate(135%)!important;box-shadow:0 20px 55px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08)!important}.bottom button{flex:1!important;border-radius:17px!important;font-size:8px!important}.bottom button i{font-size:15px!important}.bottom button.active{background:linear-gradient(145deg,rgba(255,30,61,.30),rgba(129,0,23,.16))!important;border-color:rgba(255,76,93,.34)!important;box-shadow:0 8px 25px rgba(255,21,54,.14)!important}.bottom .fab{background:#fff!important;color:#080709!important}
-
-          @media(min-width:761px){.ref-hero{height:300px}.ref-hero h2{font-size:62px}.ref-hero-hand i{font-size:230px}.upload{height:150px}.camera-card{height:150px}.right .metric-card:nth-child(1),.gestures{height:170px}.viewer{grid-row:6}.bottom{display:none!important}}
-          @media(max-width:390px){.scroll{padding-left:15px!important;padding-right:15px!important}.layout{gap:12px!important}.ref-hero{height:215px;padding-top:22px}.ref-hero h2{font-size:39px}.ref-hero p{font-size:9px}.ref-hero-hand i{font-size:145px}.upload,.camera-card{height:126px!important;min-height:126px!important}.right .metric-card:nth-child(1),.gestures{height:145px!important;min-height:145px!important}.right .metric-card:nth-child(2),.right .metric-card:nth-child(3),.right .metric-card:nth-child(4){height:108px!important;min-height:108px!important}}
-          @keyframes refOrb{from{transform:translate3d(-3px,-2px,0) scale(.94)}to{transform:translate3d(-20px,16px,0) scale(1.08)}}
-          @keyframes refOrb2{from{transform:translate3d(0,4px,0) scale(.94)}to{transform:translate3d(-30px,-12px,0) scale(1.08)}}
-          @media(prefers-reduced-motion:reduce){body:before,body:after{animation:none!important}}
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          css=r'''<style id="master-reference-layout">
+          @media(max-width:760px){
+            html,body{min-width:0!important;width:100%!important;overflow-x:hidden!important}
+            .app,.main{width:100%!important;min-width:0!important;max-width:100%!important}
+            .scroll{padding:0 20px 96px!important;width:100%!important;max-width:100%!important}
+            .layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-auto-flow:row!important;gap:14px!important;width:100%!important;max-width:none!important;margin:0!important;align-items:stretch!important}
+            .layout>.stack,.layout>.right{display:contents!important}
+            .ref-hero{display:none!important}
+            .viewer{grid-column:1/-1!important;grid-row:1!important;width:100%!important;height:clamp(330px,78vw,450px)!important;min-height:330px!important;padding:11px!important;order:1!important}
+            .viewer-head{height:31px!important;margin:0 1px 8px!important}.viewer-title{font-size:11px!important}.viewer-actions{gap:6px!important}.viewer-actions .icon{width:34px!important;height:34px!important;border-radius:10px!important}
+            #stage{width:100%!important;height:calc(100% - 40px)!important;min-height:0!important;border-radius:15px!important;background:radial-gradient(ellipse at 75% 25%,rgba(255,25,59,.14),transparent 46%),#030304!important}
+            #stage canvas{max-width:94%!important;max-height:calc(100% - 18px)!important;width:auto!important;height:auto!important}
+            .hud{top:9px!important;right:9px!important}.stage-corner{top:9px!important;left:9px!important}
+            .empty{max-width:360px!important;padding:18px!important}.empty-icon{width:58px!important;height:58px!important}.empty h3{font-size:19px!important}.empty p{font-size:10px!important;line-height:1.55!important}
+            .upload{grid-column:1/2!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;padding:14px!important;order:2!important}
+            .camera-card{grid-column:2/3!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;order:3!important}
+            .camera-card .camera{height:76px!important;min-height:76px!important}.camera-actions{margin-top:6px!important}.camera-actions .primary,.camera-actions .danger{height:34px!important;min-height:34px!important;font-size:9px!important}
+            .right .metric-card:nth-child(1){grid-column:1/2!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:4!important}
+            .gestures{grid-column:2/3!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:5!important}
+            .right .metric-card:nth-child(2){grid-column:1/2!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:6!important}
+            .right .metric-card:nth-child(3){grid-column:2/3!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:7!important}
+            .right .metric-card:nth-child(4){grid-column:1/-1!important;grid-row:5!important;height:126px!important;min-height:126px!important;order:8!important}
+            .gesture-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.gesture-card{min-height:64px!important;padding:8px!important;border-radius:12px!important}.gesture-card .gi{font-size:19px!important;margin-bottom:1px!important}.gesture-card b{font-size:8px!important}.gesture-card span{font-size:7px!important}
+            .metric-card{padding:13px!important}.metric-top{font-size:10px!important}.metric-big{font-size:20px!important}.file-name{font-size:9px!important}.confidence{margin-top:9px!important}.ring{width:56px!important;height:56px!important;flex-basis:56px!important}
+            .bottom{left:20px!important;right:20px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;width:auto!important;height:62px!important;z-index:999!important}
+          }
+          @media(max-width:430px){
+            .scroll{padding-left:16px!important;padding-right:16px!important}.layout{gap:12px!important}
+            .viewer{height:clamp(300px,82vw,370px)!important;min-height:300px!important}
+            .upload,.camera-card{height:132px!important;min-height:132px!important}.camera-card .camera{height:66px!important;min-height:66px!important}
+            .right .metric-card:nth-child(1),.gestures{height:148px!important;min-height:148px!important}
+            .right .metric-card:nth-child(2),.right .metric-card:nth-child(3),.right .metric-card:nth-child(4){height:116px!important;min-height:116px!important}
+          }
           </style>'''
-
-          for ident in ('reference-mobile-final','reference-mobile-ui','red-cinematic-bento','liquid-aurora-theme'):
-              s = re.sub(rf'<style id="{ident}">.*?</style>', '', s, flags=re.S)
-          s = s.replace('</head>', css + '\n</head>', 1)
-          p.write_text(s, encoding='utf-8')
+          s=re.sub(r'<style id="master-reference-layout">.*?</style>','',s,flags=re.S)
+          s=s.replace('</head>',css+'\n</head>',1)
+          p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit fixed UI
+      - name: Commit master layout
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix mobile reference layout geometry'
+          git commit -m 'Fix master reference layout order and viewer size'
           git push
