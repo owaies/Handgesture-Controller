@@ -103,6 +103,40 @@ body:after{width:390px;height:220px;left:32%;bottom:-85px;background:radial-grad
 @keyframes refOrb2{from{transform:translate3d(0,4px,0) scale(.94)}to{transform:translate3d(-30px,-12px,0) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){body:before,body:after{animation:none!important}}
 </style>
+<style id="master-reference-layout">
+@media(max-width:760px){
+  html,body{min-width:0!important;width:100%!important;overflow-x:hidden!important}
+  .app,.main{width:100%!important;min-width:0!important;max-width:100%!important}
+  .scroll{padding:0 20px 96px!important;width:100%!important;max-width:100%!important}
+  .layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-auto-flow:row!important;gap:14px!important;width:100%!important;max-width:none!important;margin:0!important;align-items:stretch!important}
+  .layout>.stack,.layout>.right{display:contents!important}
+  .ref-hero{display:none!important}
+  .viewer{grid-column:1/-1!important;grid-row:1!important;width:100%!important;height:clamp(330px,78vw,450px)!important;min-height:330px!important;padding:11px!important;order:1!important}
+  .viewer-head{height:31px!important;margin:0 1px 8px!important}.viewer-title{font-size:11px!important}.viewer-actions{gap:6px!important}.viewer-actions .icon{width:34px!important;height:34px!important;border-radius:10px!important}
+  #stage{width:100%!important;height:calc(100% - 40px)!important;min-height:0!important;border-radius:15px!important;background:radial-gradient(ellipse at 75% 25%,rgba(255,25,59,.14),transparent 46%),#030304!important}
+  #stage canvas{max-width:94%!important;max-height:calc(100% - 18px)!important;width:auto!important;height:auto!important}
+  .hud{top:9px!important;right:9px!important}.stage-corner{top:9px!important;left:9px!important}
+  .empty{max-width:360px!important;padding:18px!important}.empty-icon{width:58px!important;height:58px!important}.empty h3{font-size:19px!important}.empty p{font-size:10px!important;line-height:1.55!important}
+  .upload{grid-column:1/2!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;padding:14px!important;order:2!important}
+  .camera-card{grid-column:2/3!important;grid-row:2!important;width:100%!important;height:145px!important;min-height:145px!important;order:3!important}
+  .camera-card .camera{height:76px!important;min-height:76px!important}.camera-actions{margin-top:6px!important}.camera-actions .primary,.camera-actions .danger{height:34px!important;min-height:34px!important;font-size:9px!important}
+  .right .metric-card:nth-child(1){grid-column:1/2!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:4!important}
+  .gestures{grid-column:2/3!important;grid-row:3!important;height:160px!important;min-height:160px!important;order:5!important}
+  .right .metric-card:nth-child(2){grid-column:1/2!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:6!important}
+  .right .metric-card:nth-child(3){grid-column:2/3!important;grid-row:4!important;height:126px!important;min-height:126px!important;order:7!important}
+  .right .metric-card:nth-child(4){grid-column:1/-1!important;grid-row:5!important;height:126px!important;min-height:126px!important;order:8!important}
+  .gesture-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}.gesture-card{min-height:64px!important;padding:8px!important;border-radius:12px!important}.gesture-card .gi{font-size:19px!important;margin-bottom:1px!important}.gesture-card b{font-size:8px!important}.gesture-card span{font-size:7px!important}
+  .metric-card{padding:13px!important}.metric-top{font-size:10px!important}.metric-big{font-size:20px!important}.file-name{font-size:9px!important}.confidence{margin-top:9px!important}.ring{width:56px!important;height:56px!important;flex-basis:56px!important}
+  .bottom{left:20px!important;right:20px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;width:auto!important;height:62px!important;z-index:999!important}
+}
+@media(max-width:430px){
+  .scroll{padding-left:16px!important;padding-right:16px!important}.layout{gap:12px!important}
+  .viewer{height:clamp(300px,82vw,370px)!important;min-height:300px!important}
+  .upload,.camera-card{height:132px!important;min-height:132px!important}.camera-card .camera{height:66px!important;min-height:66px!important}
+  .right .metric-card:nth-child(1),.gestures{height:148px!important;min-height:148px!important}
+  .right .metric-card:nth-child(2),.right .metric-card:nth-child(3),.right .metric-card:nth-child(4){height:116px!important;min-height:116px!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
