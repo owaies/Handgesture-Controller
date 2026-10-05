@@ -52,11 +52,11 @@ The application is a static HTML experience and can be deployed directly to Verc
 
 ## 🛠️ Development
 
-```bash
-git clone https://github.com/owaies/Handgesture-Controller.git
-cd Handgesture-Controller
-python -m http.server 8000
-```
+Clone the repository and serve it with any static HTTP server:
+
+    git clone https://github.com/owaies/Handgesture-Controller.git
+    cd Handgesture-Controller
+    python -m http.server 8000
 
 Then open `http://localhost:8000/index.html`.
 
@@ -64,7 +64,7 @@ Then open `http://localhost:8000/index.html`.
 
 ## 📜 License
 
-No license file is currently present in the repository.
+This project is released under the **MIT License**. See the [`LICENSE`](LICENSE) file for the complete license text.
 
 ---
 
