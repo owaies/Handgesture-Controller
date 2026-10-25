@@ -127,7 +127,16 @@ async def upload_pptx(file: UploadFile = File(...)) -> dict[str, Any]:
     finally:
         await file.close()
 
-    info = inspect_package(destination)
+    try:
+        info = inspect_package(destination)
+    except Exception:
+        # Invalid packages must not remain addressable in persistent upload storage.
+        try:
+            destination.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
     base = PUBLIC_BASE_URL or ""
     return {
         "id": document_id,
