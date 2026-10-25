@@ -49,6 +49,12 @@ MAX_UPLOAD_MB=100
 - `POST /api/pptx/{id}/render/slides` render slide preview images with LibreOffice
 - `DELETE /api/pptx/{id}` delete an uploaded document
 
+## Upload validation and cleanup
+
+Uploads are limited by `MAX_UPLOAD_MB` (100 MB by default) and must use the `.pptx` extension. The API also checks the Office ZIP package for the required content-types and presentation entries before returning a document ID. Invalid packages receive a client error and are removed from upload storage rather than being retained as downloadable documents.
+
+When changing upload validation, verify both the HTTP response and that rejected files are not left in the configured `DATA_ROOT/uploads` directory.
+
 ## Important fidelity note
 
 LibreOffice is an open-source compatibility renderer, not Microsoft's PowerPoint rendering engine. It cannot guarantee pixel-perfect reproduction of every PowerPoint feature. ONLYOFFICE improves compatibility for many PPTX files, but it is also not a mathematical guarantee of 100% Microsoft PowerPoint fidelity.
