@@ -31,10 +31,6 @@ class UploadValidationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(raised.exception.status_code, 400)
             self.assertEqual(list(upload_root.iterdir()), [])
 
-
-if __name__ == "__main__":
-    unittest.main()
-
 class UploadLimitConfigurationTests(unittest.TestCase):
     def test_positive_integer_upload_limit_is_accepted(self) -> None:
         with patch.dict("os.environ", {"TEST_UPLOAD_LIMIT": "25"}):
@@ -46,3 +42,6 @@ class UploadLimitConfigurationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "TEST_UPLOAD_LIMIT must be a positive integer"):
                     main._positive_int_env("TEST_UPLOAD_LIMIT", 100)
 
+
+if __name__ == "__main__":
+    unittest.main()
