@@ -21,7 +21,18 @@ OUTPUT_ROOT = DATA_ROOT / "output"
 CACHE_ROOT = DATA_ROOT / "cache"
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 ONLYOFFICE_URL = os.getenv("ONLYOFFICE_URL", "").rstrip("/")
-MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "100"))
+def _positive_int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name, str(default))
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{name} must be a positive integer") from exc
+    if value < 1:
+        raise RuntimeError(f"{name} must be a positive integer")
+    return value
+
+
+MAX_UPLOAD_MB = _positive_int_env("MAX_UPLOAD_MB", 100)
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 for directory in (UPLOAD_ROOT, OUTPUT_ROOT, CACHE_ROOT):
