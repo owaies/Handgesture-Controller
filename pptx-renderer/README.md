@@ -51,7 +51,7 @@ MAX_UPLOAD_MB=100
 
 ## Upload validation and cleanup
 
-Uploads are limited by `MAX_UPLOAD_MB` (100 MB by default) and must use the `.pptx` extension. The API also checks the Office ZIP package for the required content-types and presentation entries before returning a document ID. Invalid packages receive a client error and are removed from upload storage rather than being retained as downloadable documents.
+Uploads are limited by `MAX_UPLOAD_MB` (100 MB by default). Configure it as a positive integer; invalid, zero, or negative values stop startup with a clear configuration error. Files must use the `.pptx` extension. The API also checks the Office ZIP package for the required content-types and presentation entries before returning a document ID. Invalid packages receive a client error and are removed from upload storage rather than being retained as downloadable documents.
 
 When changing upload validation, verify both the HTTP response and that rejected files are not left in the configured `DATA_ROOT/uploads` directory.
 
