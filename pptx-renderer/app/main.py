@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -34,6 +35,9 @@ def _positive_int_env(name: str, default: int) -> int:
 
 MAX_UPLOAD_MB = _positive_int_env("MAX_UPLOAD_MB", 100)
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+MAX_PACKAGE_ENTRIES = 10_000
+MAX_PACKAGE_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
+logger = logging.getLogger(__name__)
 
 for directory in (UPLOAD_ROOT, OUTPUT_ROOT, CACHE_ROOT):
     directory.mkdir(parents=True, exist_ok=True)
@@ -60,7 +64,13 @@ def safe_document_path(document_id: str) -> Path:
 def inspect_package(path: Path) -> dict[str, Any]:
     try:
         with zipfile.ZipFile(path) as zf:
-            names = zf.namelist()
+            entries = zf.infolist()
+            if len(entries) > MAX_PACKAGE_ENTRIES:
+                raise HTTPException(status_code=413, detail="PowerPoint package contains too many entries")
+            expanded_size = sum(entry.file_size for entry in entries)
+            if expanded_size > MAX_PACKAGE_UNCOMPRESSED_BYTES:
+                raise HTTPException(status_code=413, detail="PowerPoint package expands beyond the allowed size")
+            names = [entry.filename for entry in entries]
     except zipfile.BadZipFile as exc:
         raise HTTPException(status_code=400, detail="Invalid PPTX package") from exc
 
@@ -241,7 +251,8 @@ def run_libreoffice(input_path: Path, output_dir: Path) -> None:
         ]
         result = subprocess.run(command, capture_output=True, text=True, timeout=180)
         if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr[-2000:] or "LibreOffice render failed")
+            logger.error("LibreOffice render failed (exit %s): %s", result.returncode, (result.stderr or "")[-2000:])
+            raise HTTPException(status_code=500, detail="Presentation rendering failed")
     except subprocess.TimeoutExpired as exc:
         raise HTTPException(status_code=504, detail="Presentation rendering timed out") from exc
     finally:
