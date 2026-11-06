@@ -58,3 +58,35 @@ class PackageSafetyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_rejects_duplicate_archive_member_names(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "duplicate.pptx"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr("[Content_Types].xml", b"types")
+                archive.writestr("ppt/presentation.xml", b"presentation")
+                archive.writestr("ppt/presentation.xml", b"duplicate")
+
+            with self.assertRaises(HTTPException) as raised:
+                main.inspect_package(path)
+
+        self.assertEqual(raised.exception.status_code, 400)
+        self.assertEqual(
+            raised.exception.detail,
+            "PowerPoint package contains an unsafe or duplicate entry path",
+        )
+
+    def test_rejects_absolute_and_traversal_archive_member_paths(self) -> None:
+        unsafe_names = ("../outside.txt", "/outside.txt", "C:/outside.txt", "ppt/../outside.txt")
+        for unsafe_name in unsafe_names:
+            with self.subTest(name=unsafe_name), tempfile.TemporaryDirectory() as directory:
+                path = self._archive(directory, {
+                    "[Content_Types].xml": b"types",
+                    "ppt/presentation.xml": b"presentation",
+                    unsafe_name: b"outside",
+                })
+                with self.assertRaises(HTTPException) as raised:
+                    main.inspect_package(path)
+
+                self.assertEqual(raised.exception.status_code, 400)

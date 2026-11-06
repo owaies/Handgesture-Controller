@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import uuid
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -70,7 +70,27 @@ def inspect_package(path: Path) -> dict[str, Any]:
             expanded_size = sum(entry.file_size for entry in entries)
             if expanded_size > MAX_PACKAGE_UNCOMPRESSED_BYTES:
                 raise HTTPException(status_code=413, detail="PowerPoint package expands beyond the allowed size")
-            names = [entry.filename for entry in entries]
+            names = []
+            seen_names: set[str] = set()
+            for entry in entries:
+                name = entry.filename
+                normalized = name.replace("\\", "/")
+                archive_path = PurePosixPath(normalized)
+                is_windows_absolute = len(normalized) > 1 and normalized[1] == ":"
+                if (
+                    not name
+                    or name in seen_names
+                    or "\\" in name
+                    or archive_path.is_absolute()
+                    or is_windows_absolute
+                    or any(part in {".", ".."} for part in archive_path.parts)
+                ):
+                    raise HTTPException(
+                        status_code=400,
+                        detail="PowerPoint package contains an unsafe or duplicate entry path",
+                    )
+                seen_names.add(name)
+                names.append(name)
     except zipfile.BadZipFile as exc:
         raise HTTPException(status_code=400, detail="Invalid PPTX package") from exc
 
