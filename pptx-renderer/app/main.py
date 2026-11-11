@@ -58,15 +58,17 @@ def safe_document_path(document_id: str) -> Path:
         raise HTTPException(status_code=400, detail="Invalid document id")
     path = UPLOAD_ROOT / f"{document_id}.pptx"
     if not path.is_file():
-        raise HTTPException(status_code=404, detail="Presedef inspect_package(path: Path) -> dict[str, Any]:
+        raise HTTPException(status_code=404, detail="Presentation not found")
+    return path
+
+
+def inspect_package(path: Path) -> dict[str, Any]:
     """Keep package limits patchable for the renderer's focused tests."""
     return _inspect_package(
         path,
         max_entries=MAX_PACKAGE_ENTRIES,
         max_uncompressed_bytes=MAX_PACKAGE_UNCOMPRESSED_BYTES,
-    )n".lower()) for name in names),
-    }
-
+    )
 
 @app.get("/", response_class=HTMLResponse)
 def root() -> str:
