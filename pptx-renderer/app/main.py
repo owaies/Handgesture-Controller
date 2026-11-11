@@ -7,13 +7,14 @@ import shutil
 import subprocess
 import tempfile
 import uuid
-import zipfile
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+
+from app.package_safety import inspect_package as _inspect_package
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = Path(os.getenv("DATA_ROOT", "/data"))
@@ -57,65 +58,13 @@ def safe_document_path(document_id: str) -> Path:
         raise HTTPException(status_code=400, detail="Invalid document id")
     path = UPLOAD_ROOT / f"{document_id}.pptx"
     if not path.is_file():
-        raise HTTPException(status_code=404, detail="Presentation not found")
-    return path
-
-
-def inspect_package(path: Path) -> dict[str, Any]:
-    try:
-        with zipfile.ZipFile(path) as zf:
-            entries = zf.infolist()
-            if len(entries) > MAX_PACKAGE_ENTRIES:
-                raise HTTPException(status_code=413, detail="PowerPoint package contains too many entries")
-            expanded_size = sum(entry.file_size for entry in entries)
-            if expanded_size > MAX_PACKAGE_UNCOMPRESSED_BYTES:
-                raise HTTPException(status_code=413, detail="PowerPoint package expands beyond the allowed size")
-            names = []
-            seen_names: set[str] = set()
-            for entry in entries:
-                name = entry.filename
-                normalized = name.replace("\\", "/")
-                archive_path = PurePosixPath(normalized)
-                is_windows_absolute = len(normalized) > 1 and normalized[1] == ":"
-                if (
-                    not name
-                    or name in seen_names
-                    or "\\" in name
-                    or archive_path.is_absolute()
-                    or is_windows_absolute
-                    or any(part in {".", ".."} for part in archive_path.parts)
-                ):
-                    raise HTTPException(
-                        status_code=400,
-                        detail="PowerPoint package contains an unsafe or duplicate entry path",
-                    )
-                seen_names.add(name)
-                names.append(name)
-    except zipfile.BadZipFile as exc:
-        raise HTTPException(status_code=400, detail="Invalid PPTX package") from exc
-
-    if "[Content_Types].xml" not in names or "ppt/presentation.xml" not in names:
-        raise HTTPException(status_code=400, detail="File is not a valid PowerPoint presentation")
-
-    def count(prefix: str) -> int:
-        return sum(1 for name in names if name.startswith(prefix))
-
-    return {
-        "package_entries": len(names),
-        "slides": count("ppt/slides/slide") ,
-        "layouts": count("ppt/slideLayouts/slideLayout"),
-        "masters": count("ppt/slideMasters/slideMaster"),
-        "themes": count("ppt/theme/"),
-        "images": count("ppt/media/"),
-        "charts": count("ppt/charts/"),
-        "diagrams": count("ppt/diagrams/") + count("ppt/diagramData/"),
-        "embeddings": count("ppt/embeddings/"),
-        "notes": count("ppt/notesSlides/"),
-        "comments": count("ppt/comments/"),
-        "has_videos": any(name.lower().endswith((".mp4", ".wmv", ".mov", ".avi", ".m4v")) for name in names),
-        "has_audio": any(name.lower().endswith((".mp3", ".wav", ".m4a", ".aac", ".wma")) for name in names),
-        "has_embedded_fonts": any("font" in name.lower() and name.startswith("ppt/") for name in names),
-        "has_vba": any(name.lower().endswith("vbaProject.bin".lower()) for name in names),
+        raise HTTPException(status_code=404, detail="Presedef inspect_package(path: Path) -> dict[str, Any]:
+    """Keep package limits patchable for the renderer's focused tests."""
+    return _inspect_package(
+        path,
+        max_entries=MAX_PACKAGE_ENTRIES,
+        max_uncompressed_bytes=MAX_PACKAGE_UNCOMPRESSED_BYTES,
+    )n".lower()) for name in names),
     }
 
 
