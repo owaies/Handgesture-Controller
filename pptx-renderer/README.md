@@ -53,6 +53,8 @@ MAX_UPLOAD_MB=100
 
 Uploads are limited by `MAX_UPLOAD_MB` (100 MB by default). Configure it as a positive integer; invalid, zero, or negative values stop startup with a clear configuration error. Files must use the `.pptx` extension. The API also checks the Office ZIP package for the required content-types and presentation entries before returning a document ID. Invalid packages receive a client error and are removed from upload storage rather than being retained as downloadable documents.
 
+The standalone `scripts/extract_pptx.py` utility uses the same package validator before extracting files. This keeps command-line extraction subject to the same archive entry-count, expanded-size, duplicate-name, and path checks as API uploads. Symbolic-link entries are rejected. Run `python -m unittest discover -s pptx-renderer/tests -v` from the repository root after changing these safeguards.
+
 When changing upload validation, verify both the HTTP response and that rejected files are not left in the configured `DATA_ROOT/uploads` directory.
 
 ## Important fidelity note
